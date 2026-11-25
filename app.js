@@ -119,7 +119,10 @@ const QUAL_SCENES = [
 ];
 
 function createSyncController(containerEl) {
+  if (!containerEl) return null;
   const videos = Array.from(containerEl.querySelectorAll('video'));
+  if (!videos.length) return null;
+
   const playBtn = containerEl.querySelector('[data-action="toggle-play"]');
   const restartBtn = containerEl.querySelector('[data-action="restart"]');
   const jumpBtns = Array.from(containerEl.querySelectorAll('[data-action="jump"]'));
@@ -135,7 +138,8 @@ function createSyncController(containerEl) {
   const updateReadout = () => {
     const v = master();
     if (!v) return;
-    const dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : Number(scrubber.max) || 0;
+    const maxVal = scrubber ? Number(scrubber.max) || 0 : 0;
+    const dur = Number.isFinite(v.duration) && v.duration > 0 ? v.duration : maxVal;
     const cur = pendingSeek !== null ? pendingSeek : (v.currentTime || 0);
     if (!userScrubbing && scrubber) {
       scrubber.max = dur.toFixed(2);
@@ -153,11 +157,7 @@ function createSyncController(containerEl) {
     if (!Number.isFinite(v.duration) || v.duration <= 0) return false;
     const target = Math.min(Math.max(0, t), Math.max(0, v.duration - 0.06));
     try {
-      if (typeof v.fastSeek === 'function') {
-        v.currentTime = target;
-      } else {
-        v.currentTime = target;
-      }
+      v.currentTime = target;
       return true;
     } catch {
       return false;
@@ -169,9 +169,7 @@ function createSyncController(containerEl) {
     pendingSeek = t;
     let appliedAll = true;
     videos.forEach((v) => {
-      if (shouldPlay === false) {
-        v.pause();
-      }
+      if (shouldPlay === false) v.pause();
       if (v.readyState >= 1) {
         if (!applyVideoTime(v, t)) appliedAll = false;
       } else {
@@ -187,13 +185,12 @@ function createSyncController(containerEl) {
 
   if (playBtn) {
     playBtn.addEventListener('click', () => {
-      const paused = master().paused;
+      const m = master();
+      if (!m) return;
+      const paused = m.paused;
       videos.forEach((v) => {
-        if (paused) {
-          v.play().catch(() => {});
-        } else {
-          v.pause();
-        }
+        if (paused) v.play().catch(() => {});
+        else v.pause();
       });
       updateReadout();
     });
@@ -205,8 +202,7 @@ function createSyncController(containerEl) {
 
   jumpBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      const t = parseFloat(btn.dataset.time || '0');
-      syncTime(t, false);
+      syncTime(parseFloat(btn.dataset.time || '0'), false);
     });
   });
 
@@ -285,7 +281,13 @@ function setupTabs() {
     buttons.forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.tab;
-        buttons.forEach((b) => b.classList.toggle('active', b === btn));
+        buttons.forEach((b) => {
+          const isActive = b === btn;
+          b.classList.toggle('active', isActive);
+          if (b.getAttribute('role') === 'tab') {
+            b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          }
+        });
         panels.forEach((p) => p.classList.toggle('active', p.dataset.panel === target));
       });
     });
@@ -312,7 +314,7 @@ function buildCropHTML(srcPath, crop) {
   const imgH = (224 / h) * 100;
   const left = -(x1 / w) * 100;
   const top = -(y1 / h) * 100;
-  return `<div style="position:relative;width:100%;aspect-ratio:${w}/${h};overflow:hidden;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#f1f5f9;">
+  return `<div class="qual-crop-frame" style="position:relative;width:100%;aspect-ratio:${w}/${h};overflow:hidden;">
     <img src="${srcPath}" alt="" style="position:absolute;max-width:none;width:${imgW}%;height:${imgH}%;left:${left}%;top:${top}%;" />
   </div>`;
 }
@@ -331,19 +333,35 @@ function setupQualGallery() {
   const overlayEl = document.getElementById('compareOverlay');
   const dividerEl = document.getElementById('compareDivider');
 
+  if (!tabsEl || !promptBox || !gridEl) return;
+
+  // Segmented view toggle (5-Way Grid vs Interactive Slider)
+  const viewBtns = Array.from(document.querySelectorAll('[data-qual-view]'));
+  const viewPanels = Array.from(document.querySelectorAll('[data-qual-panel]'));
+  if (viewBtns.length && viewPanels.length) {
+    viewBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.qualView;
+        viewBtns.forEach((b) => b.classList.toggle('active', b === btn));
+        viewPanels.forEach((p) => p.classList.toggle('active', p.dataset.qualPanel === mode));
+      });
+    });
+  }
+
   let activeIdx = 0;
 
   const updateSliderView = () => {
+    if (!baseSelect || !modeSelect || !imgLeft || !imgRight) return;
     const scene = QUAL_SCENES[activeIdx];
     const bIdx = parseInt(baseSelect.value || '0', 10);
-    const baseMethod = scene.methods[bIdx];
+    const baseMethod = scene.methods[bIdx] || scene.methods[0];
     const oursMethod = scene.methods[4];
     const zoom = modeSelect.value === 'crop';
 
     imgLeft.src = `assets/images/${baseMethod.file}`;
     imgRight.src = `assets/images/${oursMethod.file}`;
-    tagLeft.textContent = `${baseMethod.name} (${baseMethod.flops})`;
-    tagRight.textContent = `${oursMethod.name} (${oursMethod.flops})`;
+    if (tagLeft) tagLeft.textContent = `${baseMethod.name} (${baseMethod.flops})`;
+    if (tagRight) tagRight.textContent = `${oursMethod.name} (${oursMethod.flops})`;
 
     const applyCropOrReset = (imgEl, crop) => {
       if (!zoom) {
@@ -374,11 +392,13 @@ function setupQualGallery() {
     tabsEl.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
     promptBox.innerHTML = `<strong>${scene.backbone}</strong> &mdash; Prompt: <em>${scene.prompt}</em>`;
 
-    Array.from(baseSelect.options).forEach((opt, i) => {
-      if (scene.methods[i]) {
-        opt.textContent = `${scene.methods[i].name} (${scene.methods[i].flops})`;
-      }
-    });
+    if (baseSelect) {
+      Array.from(baseSelect.options).forEach((opt, i) => {
+        if (scene.methods[i]) {
+          opt.textContent = `${scene.methods[i].name} (${scene.methods[i].flops})`;
+        }
+      });
+    }
 
     gridEl.innerHTML = scene.methods.map((m) => {
       const [x1, y1, x2, y2] = m.crop;
@@ -411,26 +431,31 @@ function setupQualGallery() {
     btn.addEventListener('click', () => renderScene(parseInt(btn.dataset.qidx, 10)));
   });
 
-  baseSelect.addEventListener('change', updateSliderView);
-  modeSelect.addEventListener('change', updateSliderView);
+  if (baseSelect) baseSelect.addEventListener('change', updateSliderView);
+  if (modeSelect) modeSelect.addEventListener('change', updateSliderView);
 
-  const updateDivider = () => {
-    const pct = parseFloat(rangeEl.value || '50');
-    overlayEl.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
-    dividerEl.style.left = `${pct}%`;
-  };
-  rangeEl.addEventListener('input', updateDivider);
-  updateDivider();
+  if (rangeEl && overlayEl && dividerEl) {
+    const updateDivider = () => {
+      const pct = parseFloat(rangeEl.value || '50');
+      overlayEl.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+      dividerEl.style.left = `${pct}%`;
+    };
+    rangeEl.addEventListener('input', updateDivider);
+    updateDivider();
+  }
 
   renderScene(0);
 }
 
 function setupLongLiveGallery() {
   const containerEl = document.getElementById('longliveGallery');
+  if (!containerEl) return;
   const controller = createSyncController(containerEl);
+  if (!controller) return;
   const tabsEl = document.getElementById('llSceneTabs');
   const metricsEl = document.getElementById('llMetrics');
   const stripEl = document.getElementById('llStripContainer');
+  if (!tabsEl || !metricsEl || !stripEl) return;
 
   const times = [
     { suf: '00', label: '0s', seek: 0, cls: '' },
@@ -449,6 +474,11 @@ function setupLongLiveGallery() {
       <span class="metric-chip">LPIPS: ${s.lpipsBase} &rarr; <strong>${s.lpipsOurs}</strong></span>
       <span class="metric-chip">TempSSIM: ${s.ssimBase} &rarr; <strong>${s.ssimOurs}</strong></span>
     `;
+    if (s.stripPrefix) {
+      const vids = containerEl.querySelectorAll('video');
+      if (vids[0]) vids[0].poster = `assets/images/longlive_frames/${s.stripPrefix}_base_00.jpg`;
+      if (vids[1]) vids[1].poster = `assets/images/longlive_frames/${s.stripPrefix}_ours_00.jpg`;
+    }
     controller.loadSources([s.baseVideo, s.oursVideo], false);
 
     if (!s.stripPrefix) {
@@ -494,6 +524,7 @@ function setupLightbox() {
   const modalImg = document.getElementById('lightboxImg');
   const modalCap = document.getElementById('lightboxCaption');
   const closeBtn = document.getElementById('lightboxClose');
+  if (!modal || !modalImg || !modalCap || !closeBtn) return;
 
   const close = () => modal.classList.remove('open');
   closeBtn.addEventListener('click', close);
@@ -600,6 +631,46 @@ function setupPvPlayer() {
   }
 }
 
+function setupScrollSpy() {
+  const links = Array.from(document.querySelectorAll('[data-spy-link], .nav-links a[href^="#"], .toc-link[href^="#"]'));
+  if (!links.length || typeof IntersectionObserver !== 'function') return;
+
+  const idToLinks = new Map();
+  links.forEach((link) => {
+    const href = link.getAttribute('href') || '';
+    if (!href.startsWith('#') || href.length < 2) return;
+    const id = href.slice(1);
+    if (!idToLinks.has(id)) idToLinks.set(id, []);
+    idToLinks.get(id).push(link);
+  });
+
+  const sections = Array.from(idToLinks.keys())
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (!sections.length) return;
+
+  const setActive = (activeId) => {
+    links.forEach((l) => l.classList.remove('active'));
+    const matching = idToLinks.get(activeId) || [];
+    matching.forEach((l) => l.classList.add('active'));
+  };
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length) {
+        setActive(visible[0].target.id);
+      }
+    },
+    { rootMargin: '-18% 0px -65% 0px', threshold: 0.01 }
+  );
+
+  sections.forEach((sec) => observer.observe(sec));
+}
+
+
 document.addEventListener('DOMContentLoaded', () => {
   if (window.ELPCharts) window.ELPCharts.renderAll();
   setupPvPlayer();
@@ -609,4 +680,5 @@ document.addEventListener('DOMContentLoaded', () => {
   setupQualGallery();
   setupLightbox();
   setupBibCopy();
+  setupScrollSpy();
 });
