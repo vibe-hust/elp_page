@@ -147,33 +147,29 @@
     <div class="container">
       <div class="section-head">
         <div class="section-eyebrow">01 &middot; <strong>Multimodal</strong> Overview</div>
-        <h2 class="section-title">One Executable Program-Search Framework Across Image, Text, and Video</h2>
+        <h2 class="section-title">Find better loops for image, text, and video models</h2>
       </div>
 
       <div class="elp-card abstract-lead">
-        <p>
-          Reusing transformer blocks through loops can improve pretrained models without updating their weights. However, useful loops require coordinated choices about which blocks repeat, how hidden states evolve, and when computation is reused. We introduce <strong>Evolving Loop Programs (ELP)</strong>, an offline LLM-based method for discovering executable inference programs with favorable quality&ndash;compute trade-offs.
-        </p>
-        <p>
-          The search jointly edits <em>loop structure</em>, <em>state-update dynamics</em>, and <em>execution controls</em>&mdash;including sampling schedules, guidance, and intermediate-state reuse. Selected nondominated programs are frozen as standalone code and parameters and deployed with zero search-LLM calls across 9 frozen backbones in image diffusion, text reasoning, and video world models.
-        </p>
+        <p>Repeating transformer blocks can improve a pretrained model without changing its weights. <strong>ELP</strong> uses an AI agent to find useful loops: which blocks to repeat, how to update their hidden states, and when to reuse earlier work.</p>
+        <p>The agent also adjusts sampling schedules and guidance. After search, selected programs run as fixed code and settings, with no further search-agent calls. We test them on 9 frozen backbones for image generation, text reasoning, and video generation.</p>
       </div>
 
       <div class="contrib-grid">
         <div class="contrib-card">
           <span class="contrib-num">01</span>
-          <h3>Executable Program Space</h3>
-          <p>Formulates training-free looping as joint search over executable update rules and parameters, going beyond fixed parameter menus.</p>
+          <h3>Search over code</h3>
+          <p>The search can change both the update code and its settings, instead of choosing only from a fixed menu.</p>
         </div>
         <div class="contrib-card">
           <span class="contrib-num">02</span>
-          <h3>Diagnostic-Guided Evolution</h3>
-          <p>Authors custom runtime probes to inspect activation alignment, guidance branches, and residual drift before proposing targeted edits.</p>
+          <h3>Inspect each run</h3>
+          <p>The agent writes checks to see how features, guidance, and updates change during generation. It uses these observations to propose edits.</p>
         </div>
         <div class="contrib-card">
           <span class="contrib-num">03</span>
-          <h3>Unified <strong>Multimodal</strong> Transfer</h3>
-          <p>Generalizes across 9 frozen backbones in image diffusion, STEM &amp; open-ended reasoning, and autoregressive video world models.</p>
+          <h3>Test across <strong>9 models</strong></h3>
+          <p>The same framework is tested on 9 image, reasoning, and video models. Their weights stay fixed.</p>
         </div>
       </div>
 
@@ -211,40 +207,34 @@
     <div class="container">
       <div class="section-head">
         <div class="section-eyebrow">02 &middot; Methodology</div>
-        <h2 class="section-title">Four-Component Closed-Loop Program Search</h2>
-        <p class="section-lead">
-          All LLM search and diagnostic overhead occurs once offline per backbone. At deployment, frozen programs execute deterministically inside the frozen model with zero search-LLM calls.
-        </p>
+        <h2 class="section-title">How the search works</h2>
+        <p class="section-lead">Search runs offline for each model. The selected programs then run without further calls to the search agent or changes to model weights.</p>
       </div>
 
       <div class="elp-card">
         <div class="tabs" data-tab-group="method-view" role="tablist">
-          <button type="button" class="tab-btn ours-accent active" role="tab" aria-selected="true" data-tab="method-anim">Interactive Architecture &amp; Search Walkthrough</button>
-          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="method-static">Static Paper Diagram (Fig. 2)</button>
+          <button type="button" class="tab-btn ours-accent active" role="tab" aria-selected="true" data-tab="method-anim">Watch the search</button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="method-static">Paper diagram (Figure 2)</button>
         </div>
 
         <div class="tab-panel active" data-panel-group="method-view" data-panel="method-anim">
           <div id="elpMethodAnim"></div>
-          <p class="figure-caption">
-            <strong>Interactive Walkthrough of ELP.</strong> Switch between flagship <em>Scale-RAE</em>, <em>Looped-DiT-B32</em>, <em>LongLive 2.0</em>, and <em>Dory1.0-4B</em> searches and inspect synchronized code edits, diagnostics, and execution controls.
-          </p>
+          <p class="figure-caption">Choose <em>Scale-RAE</em>, <em>Looped-DiT-B32</em>, <em>LongLive 2.0</em>, or <em>Dory1.0-4B</em> to follow the code changes, observations, and results.</p>
         </div>
 
         <div class="tab-panel" data-panel-group="method-view" data-panel="method-static">
           <img class="zoomable svg-figure" src="assets/figures/method_overview.svg" alt="ELP four-component search loop architecture diagram" />
-          <p class="figure-caption">
-            <strong>Overview of Evolving Loop Programs (ELP).</strong> The coordinator executes candidate loop programs, records programmable diagnostics, and feeds back nondominated Pareto frontiers.
-          </p>
+          <p class="figure-caption">ELP tests each program and records what happened. The agent uses those results to improve the next round of programs.</p>
         </div>
       </div>
 
       <div class="method-grid">
         <div class="method-card">
           <div class="method-card-head">
-            <h3>1. What to Search: Loop Programs</h3>
+            <h3>1. Write a loop program</h3>
             <span class="method-tag">Structure &middot; Dynamics &middot; Control</span>
           </div>
-          <p>Each candidate <em>p = (c, &lambda;)</em> pairs executable code <em>c</em> with settings &lambda;, generalizing fixed block repetition to conditional, scheduled, and state-reusing recurrence.</p>
+          <p>Each candidate <em>p = (c, &lambda;)</em> contains code <em>c</em> and settings &lambda;. Together, they decide which blocks repeat, how states change, and when earlier work is reused.</p>
           <div class="eq-box">
             <span><strong>s</strong><sub><em>t</em></sub><sup>(<em>k</em>+1)</sup> = <strong>U</strong><sub>&theta;,<em>p</em></sub>(<strong>s</strong><sub><em>t</em></sub><sup>(<em>k</em>)</sup>; <em>t</em>, <em>k</em>)</span>
             <span class="eq-num">Eq. (2)</span>
@@ -253,10 +243,10 @@
 
         <div class="method-card">
           <div class="method-card-head">
-            <h3>2. What to Observe: Programmable Diagnostics</h3>
+            <h3>2. Inspect the run</h3>
             <span class="method-tag">Runtime Traces</span>
           </div>
-          <p>The search LLM authors diagnostic collectors <em>D<sub>r</sub></em> to inspect activation similarity across repetitions, guidance divergence, and inter-step residual stability on dev inputs.</p>
+          <p>The agent writes checks <em>D<sub>r</sub></em> for development inputs. These inspect how features, guidance, and updates change between repetitions and sampling steps.</p>
           <div class="eq-box">
             <span>&#120030;<sub><em>r</em></sub>(<em>p</em>) = <em>D<sub>r</sub></em>( Trace<sub>&theta;</sub>(<em>p</em>, &#120039;<sub>dev</sub>) )</span>
             <span class="eq-num">Eq. (3)</span>
@@ -265,10 +255,10 @@
 
         <div class="method-card">
           <div class="method-card-head">
-            <h3>3. How to Search: Evidence-Guided Evolution</h3>
+            <h3>3. Improve the program</h3>
             <span class="method-tag">Offline Refinement</span>
           </div>
-          <p>At round <em>r</em>, the LLM proposes candidate batch &#119979;<sub><em>r</em>+1</sub> from accumulated history, prior failures, and diagnostic observations guided by target vector <strong>a</strong>.</p>
+          <p>At round <em>r</em>, the agent uses earlier results, failures, and observations to propose new programs. The target <strong>a</strong> tells it which outcomes to prioritize.</p>
           <div class="eq-box">
             <span>&#120031;<sub><em>r</em>+1</sub> = LLM(&#120018;<sub><em>r</em></sub>, &#120023;<sub><em>r</em></sub>, &#120030;<sub>&le;<em>r</em></sub>; <strong>a</strong>)</span>
             <span class="eq-num">Eq. (4)</span>
@@ -277,10 +267,10 @@
 
         <div class="method-card">
           <div class="method-card-head">
-            <h3>4. What to Evaluate &amp; Select: Pareto Priorities</h3>
+            <h3>4. Choose a speed–quality trade-off</h3>
             <span class="method-tag">Frozen Deployment</span>
           </div>
-          <p>Nondominated fronts track task metrics alongside latency speedup <em>T</em>(<em>p</em><sub>0</sub>)/<em>T</em>(<em>p</em>). Representative <strong>Speed</strong>, <strong>Balanced</strong>, and <strong>Quality</strong> programs are frozen.</p>
+          <p>Keep programs that offer useful trade-offs between quality and speed. Select fixed <strong>Speed</strong>, <strong>Balanced</strong>, and <strong>Quality</strong> programs for use after search.</p>
           <div class="eq-box">
             <span><strong>v</strong>(<em>p</em>) = (<em>q</em><sub>1</sub>(<em>p</em>), &hellip;, <em>q<sub>m</sub></em>(<em>p</em>), <em>T</em>(<em>p</em><sub>0</sub>)/<em>T</em>(<em>p</em>))</span>
             <span class="eq-num">Eq. (5)</span>
@@ -289,8 +279,8 @@
       </div>
 
       <div class="elp-card" style="margin-top:20px;margin-bottom:0;">
-        <h3>Discovered Frozen Loop Motifs Across Backbones</h3>
-        <p class="elp-sub">ELP discovers fundamentally distinct loop structures, update rules, and KV/reference controls tailored to each architecture.</p>
+        <h3>Examples of discovered loops</h3>
+        <p class="elp-sub">Different models lead to different loop structures, update rules, and ways to reuse memory or reference features.</p>
         <div class="table-wrap">
           <table class="data-table motifs-table">
             <thead>
@@ -315,7 +305,7 @@
     <div class="container">
       <div class="section-head">
         <div class="section-eyebrow">03 &middot; Qualitative Showcase</div>
-        <h2 class="section-title">Synchronized Video Consistency &amp; Image Detail Preservation</h2>
+        <h2 class="section-title">Compare videos and image details</h2>
         <p class="section-lead">
           Inspect frame-accurate world-model revisit memory on LongLive 2.0 (5B) and 5-way image comparisons on Scale-RAE and RAE.
         </p>
@@ -429,7 +419,7 @@
     <div class="container">
       <div class="section-head">
         <div class="section-eyebrow">04 &middot; Quantitative Benchmarks</div>
-        <h2 class="section-title">Complete Evaluation Across 3 Modalities &amp; 9 Backbones</h2>
+        <h2 class="section-title">Results across image, text, and video</h2>
         <p class="section-lead">
           Explore frozen-program evaluations across Image diffusion, Text reasoning LLMs, and Video world &amp; diffusion models.
         </p>
@@ -680,7 +670,7 @@
     <div class="container">
       <div class="section-head">
         <div class="section-eyebrow">05 &middot; Search Design Analysis (RQ2)</div>
-        <h2 class="section-title">What Search Choices Drive Program Performance?</h2>
+        <h2 class="section-title">Which search choices help?</h2>
         <p class="section-lead">
           Controlled 80-candidate ablations on Scale-RAE isolate search space expressiveness, programmable diagnostics, search LLM, target strength, and objectives.
         </p>
