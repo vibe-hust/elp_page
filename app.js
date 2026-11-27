@@ -62,20 +62,20 @@ const LONGLIVE_SCENES = [
     stripPrefix: 'barrel'
   },
   {
-    id: 'suitcase',
-    label: 'Suitcase (Failure Case)',
-    title: 'Gray Suitcase & Yellow Shirt (Failure Case \u00b7 Held-Out)',
+    id: 'biscotti',
+    label: 'Biscotti Crock (Failure Case)',
+    title: 'Biscotti Crock & Almond Biscotti (Failure Case \u00b7 Held-Out)',
     failure: true,
-    baseVideo: 'assets/videos/longlive/suitcase_base.mp4',
-    oursVideo: 'assets/videos/longlive/suitcase_ours.mp4',
-    clipBase: '0.6486',
-    clipOurs: '0.8007',
-    lpipsBase: '0.6627',
-    lpipsOurs: '0.5822',
-    ssimBase: '0.9514',
-    ssimOurs: '0.9683',
-    note: 'Failure case (remaining LPIPS > 0.40 on held-out split): both models open at 3.6s and close cleanly at 6.5s, but on revisit (12.5s\u201315.8s) Native jams shut while ELP recalls the yellow shirt inside yet fails to lift the rigid lid back open\u2014instead peeling/warping only the bottom-left corner. This illustrates the boundary of training-free looping: middle-band recurrence stabilizes memory against drift, while frozen weights inherit the base model\u2019s large-motion execution limits.',
-    stripPrefix: 'suitcase'
+    baseVideo: 'assets/videos/longlive/biscotti_base.mp4',
+    oursVideo: 'assets/videos/longlive/biscotti_ours.mp4',
+    clipBase: '0.9177',
+    clipOurs: '0.9546',
+    lpipsBase: '0.4394',
+    lpipsOurs: '0.0713',
+    ssimBase: '0.9645',
+    ssimOurs: '0.9919',
+    note: 'Over-stabilization failure case (held-out split): Baseline completes the full A\u2192B\u2192A cycle\u2014lifting the cork lid at 3.6s, sealing the crock across 6.5s\u201312.5s, and reopening to the same two almond biscotti at 15.8s. ELP opens cleanly at 3.6s but then freezes open and never closes the lid (6.5s\u201315.8s), illustrating how strong middle-band recurrence can over-damp intermediate prompt transitions\u2014and inflate pairwise departure-vs-revisit scores (LPIPS 0.0713) because the scene stays static.',
+    stripPrefix: 'biscotti'
   }
 ];
 
