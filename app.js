@@ -329,6 +329,7 @@ function setupQualGallery() {
   const imgRight = document.getElementById('compareImgRight');
   const tagLeft = document.getElementById('compareTagLeft');
   const tagRight = document.getElementById('compareTagRight');
+  const metaEl = document.getElementById('compareMeta');
   const rangeEl = document.getElementById('compareRange');
   const overlayEl = document.getElementById('compareOverlay');
   const dividerEl = document.getElementById('compareDivider');
@@ -360,8 +361,11 @@ function setupQualGallery() {
 
     imgLeft.src = `assets/images/${baseMethod.file}`;
     imgRight.src = `assets/images/${oursMethod.file}`;
-    if (tagLeft) tagLeft.textContent = `${baseMethod.name} (${baseMethod.flops})`;
-    if (tagRight) tagRight.textContent = `${oursMethod.name} (${oursMethod.flops})`;
+    if (tagLeft) tagLeft.textContent = baseMethod.name;
+    if (tagRight) tagRight.textContent = 'ELP (Ours)';
+    if (metaEl) {
+      metaEl.innerHTML = `<span><strong>${baseMethod.name}:</strong> ${baseMethod.flops} &middot; ${baseMethod.verdict}</span><span class="compare-meta-ours"><strong>${oursMethod.name}:</strong> ${oursMethod.flops} &middot; ${oursMethod.verdict}</span>`;
+    }
 
     const applyCropOrReset = (imgEl, crop) => {
       if (!zoom) {
@@ -498,10 +502,12 @@ function setupLongLiveGallery() {
 
     stripEl.innerHTML = `
       <div class="prompt-banner" style="margin:0 0 12px;"><strong>${s.title}:</strong> ${s.note} <em>(Click any frame below to seek both videos.)</em></div>
-      <div class="strip-grid">
-        <div></div>${headerCells}
-        <div class="strip-row-label">Baseline</div>${baseImgs}
-        <div class="strip-row-label ours">ELP (Ours)</div>${oursImgs}
+      <div class="strip-scroll">
+        <div class="strip-grid">
+          <div></div>${headerCells}
+          <div class="strip-row-label">Baseline</div>${baseImgs}
+          <div class="strip-row-label ours">ELP (Ours)</div>${oursImgs}
+        </div>
       </div>
     `;
     stripEl.querySelectorAll('[data-seek]').forEach((img) => {
@@ -633,7 +639,7 @@ function setupPvPlayer() {
 
 function setupScrollSpy() {
   const links = Array.from(document.querySelectorAll('[data-spy-link], .nav-links a[href^="#"], .toc-link[href^="#"]'));
-  if (!links.length || typeof IntersectionObserver !== 'function') return;
+  if (!links.length) return;
 
   const idToLinks = new Map();
   links.forEach((link) => {
@@ -649,25 +655,54 @@ function setupScrollSpy() {
     .filter(Boolean);
   if (!sections.length) return;
 
+  let currentId = null;
   const setActive = (activeId) => {
+    if (activeId === currentId) return;
+    currentId = activeId;
     links.forEach((l) => l.classList.remove('active'));
+    if (!activeId) return;
     const matching = idToLinks.get(activeId) || [];
     matching.forEach((l) => l.classList.add('active'));
   };
 
-  const observer = new IntersectionObserver(
-    (entries) => {
-      const visible = entries
-        .filter((e) => e.isIntersecting)
-        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      if (visible.length) {
-        setActive(visible[0].target.id);
+  const computeActive = () => {
+    const headerEl = document.querySelector('.topbar');
+    const headerH = headerEl ? headerEl.offsetHeight : 66;
+    const scrollPos = window.scrollY;
+    const atBottom = window.innerHeight + scrollPos >= document.documentElement.scrollHeight - 24;
+    if (atBottom) {
+      setActive(sections[sections.length - 1].id);
+      return;
+    }
+    const probeY = scrollPos + headerH + 96;
+    if (probeY < sections[0].offsetTop) {
+      setActive(null);
+      return;
+    }
+    let active = sections[0].id;
+    for (let i = 0; i < sections.length; i++) {
+      if (sections[i].offsetTop <= probeY) {
+        active = sections[i].id;
+      } else {
+        break;
       }
-    },
-    { rootMargin: '-18% 0px -65% 0px', threshold: 0.01 }
-  );
+    }
+    setActive(active);
+  };
 
-  sections.forEach((sec) => observer.observe(sec));
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(() => {
+      ticking = false;
+      computeActive();
+    });
+  };
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll, { passive: true });
+  computeActive();
 }
 
 

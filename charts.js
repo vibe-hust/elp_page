@@ -415,6 +415,10 @@
       "font-size": 9.8,
       "font-weight": 700,
       fill: color || COLORS.oursDark,
+      stroke: COLORS.white,
+      "stroke-width": 3.2,
+      "stroke-linejoin": "round",
+      "paint-order": "stroke",
     });
   }
 
@@ -432,7 +436,7 @@
       x: sx(1.0), y: sy(71.8), width: sx(2.22) - sx(1.0), height: sy(53.8) - sy(71.8),
       fill: COLORS.oursFill,
     }, svg);
-    svgText(svg, sx(2.18), sy(70.6), "Faster & Higher", {
+    svgText(svg, sx(2.18), sy(54.7), "Faster & Higher \u2197", {
       "text-anchor": "end", "font-size": 8.8, "font-weight": 700, fill: COLORS.ours, opacity: 0.85,
     });
 
@@ -505,7 +509,7 @@
       }, svg);
       attachTooltip(star, `<b>Selected ELP: ${s.label}</b><br>${s.desc}`);
       if (i === 0) {
-        drawCallout(svg, px + 3, py - 2, sx(1.26), sy(70.1), "Quality (14s \u00b7 +15.5 pp)", "start", COLORS.oursDark);
+        drawCallout(svg, px + 3, py - 2, sx(1.26), sy(70.5), "Quality (14s \u00b7 +15.5 pp)", "start", COLORS.oursDark);
       } else {
         drawCallout(svg, px + 3, py - 2, sx(1.69), sy(66.5), "Speed (10s \u00b7 1.61\u00d7)", "start", COLORS.oursDark);
       }
@@ -595,7 +599,7 @@
       if (i === 0) {
         drawCallout(svg, px + 2, py - 3, sx(4.4), sy(86.9), "Quality (25s \u00b7 +0.45 pp, 4.00\u00d7)", "start", COLORS.oursDark);
       } else {
-        drawCallout(svg, px + 1, py - 5, sx(8.5), sy(85.7), "Speed (14s \u00b7 7.82\u00d7)", "end", COLORS.oursDark);
+        drawCallout(svg, px + 1, py - 5, sx(8.52), sy(85.35), "Speed (14s \u00b7 7.82\u00d7)", "end", COLORS.oursDark);
       }
     });
 
@@ -653,7 +657,7 @@
     }, svg);
     attachTooltip(k1Node, `<b>${k1.label}</b><br>${k1.x.toFixed(2)} TFLOPs \u00b7 ${k1.y.toFixed(2)}% Mean Score`);
 
-    svgText(svg, sx(7.45), sy(78.6), "Native K=4 (14s)", { "text-anchor": "middle", "font-size": 9, fill: COLORS.muted });
+    svgText(svg, sx(4.8), sy(78.5), "Native K=4 (14s)", { "text-anchor": "start", "font-size": 9, fill: COLORS.muted });
     svgText(svg, sx(62), sy(85.15), "Looped-DiT (100s)", { "font-size": 9.2, "font-weight": 600, fill: COLORS.base });
     drawCallout(svg, sx(k1.x), sy(k1.y) + 6, sx(42), sy(78.0), "Native K=1 (100s)", "start", COLORS.muted);
 
@@ -887,7 +891,7 @@
     // Native anchors line
     const yBase = sy(2.8756);
     svgEl("line", { x1: sx(-2), y1: yBase, x2: sx(84), y2: yBase, stroke: COLORS.ref, "stroke-dasharray": "5 3", "stroke-width": 1.6 }, svg);
-    svgText(svg, sx(52), yBase - 6, "Native anchors (2.8756)", { "font-size": 9.5, "font-weight": 600, fill: COLORS.refDark });
+    svgText(svg, sx(82), yBase + 13, "Native anchors (2.8756)", { "text-anchor": "end", "font-size": 9.3, "font-weight": 600, fill: COLORS.refDark });
 
     addPolyline(svg, HV_LOOPED, sx, sy, { stroke: COLORS.ours, "stroke-width": 2.4 });
     HV_LOOPED.forEach(([x, y], idx) => {
@@ -904,7 +908,7 @@
     });
 
     // R1-R8 Zoom Inset
-    const ix = 235, iy = 104, iw = 208, ih = 96;
+    const ix = 235, iy = 88, iw = 208, ih = 94;
     const isx = scaleLin(22, 82, ix + 34, ix + iw - 10);
     const isy = scaleLin(5.705, 5.825, iy + ih - 18, iy + 22);
     const gIn = svgEl("g", {}, svg);

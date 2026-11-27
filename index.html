@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Evolving Loop Programs (ELP): Discovering How Frozen Transformers Should Loop</title>
   <link rel="icon" href="assets/figures/loop-dna.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css?v=polish-20261127" />
   <link rel="canonical" href="https://vibe-hust.github.io/elp_page/">
-  <link rel="stylesheet" href="institution-header.css?v=20261126">
+  <link rel="stylesheet" href="institution-header.css?v=polish-20261127">
   <script src="institution-header.js?v=20261126" defer></script>
 </head>
 <body>
@@ -36,7 +36,7 @@
     <div class="container">
       <div class="hero-header">
         <div class="tonal-eyebrow">
-          <span>In Submission &middot; Training-Free <strong>Multimodal</strong> Inference</span>
+          <span>Research Preprint &middot; Training-Free <strong>Multimodal</strong> Inference</span>
         </div>
 
         <h1 class="hero-title">
@@ -47,18 +47,20 @@
           <span class="hero-subtitle">Discovering How Frozen Transformers Should Loop</span>
         </h1>
 
-        <p class="hero-authors">
-          <a href="https://github.com/cheyan9" target="_blank" rel="noopener">Yang Chen</a><sup>1</sup> &middot;
-          <a href="https://github.com/Kaitai-Shen" target="_blank" rel="noopener">Kaitai Shen</a><sup>1</sup> &middot;
-          <a href="https://www.cwi.nl/en/people/xuemei-zhou/" target="_blank" rel="noopener">Xuemei Zhou</a><sup>2</sup> &middot;
-          <a href="https://tenglon.github.io/" target="_blank" rel="noopener">Teng Long</a><sup>3</sup> &middot;
-          <a href="https://taohu.me/" target="_blank" rel="noopener">Vincent Tao Hu</a><sup>1</sup>
-        </p>
-        <p class="hero-affil">
-          <sup>1</sup>School of Software Engineering, Huazhong University of Science and Technology &middot;
-          <sup>2</sup>Centrum voor Wiskunde en Informatica (CWI) &middot;
-          <sup>3</sup>University of Trento
-        </p>
+        <ul class="hero-authors" role="list" aria-label="Authors">
+          <li><a href="https://github.com/cheyan9" target="_blank" rel="noopener">Yang Chen</a><sup>1</sup></li>
+          <li><a href="https://github.com/Kaitai-Shen" target="_blank" rel="noopener">Kaitai Shen</a><sup>1</sup></li>
+          <li><a href="https://www.cwi.nl/en/people/xuemei-zhou/" target="_blank" rel="noopener">Xuemei Zhou</a><sup>2</sup></li>
+          <li><a href="https://tenglon.github.io/" target="_blank" rel="noopener">Teng Long</a><sup>3</sup></li>
+          <li><a href="https://taohu.me/" target="_blank" rel="noopener">Vincent Tao Hu</a><sup>1</sup></li>
+        </ul>
+        <div class="hero-affil">
+          <span class="affil-line"><sup>1</sup>School of Software Engineering, Huazhong University of Science and Technology</span>
+          <span class="affil-line affil-row">
+            <span><sup>2</sup>Centrum voor Wiskunde en Informatica (CWI)</span>
+            <span><sup>3</sup>University of Trento</span>
+          </span>
+        </div>
 
         <div class="hero-modalities" aria-label="Multimodal coverage across Image, Video, and Text">
           <span class="hero-mod-lead"><strong>Multimodal</strong></span>
@@ -95,16 +97,17 @@
         <div class="pv-head">
           <div class="pv-title">
             <span class="pv-pill">OVERVIEW FILM</span>
+            <span class="pv-duration">01:00 Walkthrough</span>
           </div>
+          <span class="pv-meta">Jump to any chapter below</span>
         </div>
 
         <div class="pv-stage" id="pvStage">
           <video id="pvVideo" src="assets/videos/elp_pv.mp4" poster="assets/videos/elp_pv_poster.jpg" controls playsinline preload="metadata"></video>
-          <button type="button" class="pv-play-overlay" id="pvPlayOverlay" aria-label="Play Overview Film">
+          <button type="button" class="pv-play-overlay" id="pvPlayOverlay" aria-label="Play Overview Film (01:00)">
             <span class="pv-play-circle">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="7 4 20 12 7 20 7 4"/></svg>
             </span>
-            <span class="pv-play-label">Play Overview Film (01:00)</span>
           </button>
         </div>
 
@@ -397,17 +400,20 @@
                 <option value="crop">Enlarged Paper Detail Region</option>
               </select>
             </div>
-            <div class="compare-stage" id="compareStage">
-              <img id="compareImgRight" alt="ELP Ours image" />
-              <div class="compare-overlay" id="compareOverlay">
-                <img id="compareImgLeft" alt="Baseline comparison image" />
+            <div class="compare-stage-col">
+              <div class="compare-stage" id="compareStage">
+                <img id="compareImgRight" alt="ELP Ours image" />
+                <div class="compare-overlay" id="compareOverlay">
+                  <img id="compareImgLeft" alt="Baseline comparison image" />
+                </div>
+                <div class="compare-divider" id="compareDivider">
+                  <div class="compare-handle">&harr;</div>
+                </div>
+                <span class="compare-tag left" id="compareTagLeft">Baseline</span>
+                <span class="compare-tag right" id="compareTagRight">ELP (Ours)</span>
+                <input type="range" class="compare-range" id="compareRange" min="5" max="95" value="50" aria-label="Compare slider position" />
               </div>
-              <div class="compare-divider" id="compareDivider">
-                <div class="compare-handle">&harr;</div>
-              </div>
-              <span class="compare-tag left" id="compareTagLeft">Baseline</span>
-              <span class="compare-tag right" id="compareTagRight">ELP (Ours)</span>
-              <input type="range" class="compare-range" id="compareRange" min="5" max="95" value="50" aria-label="Compare slider position" />
+              <div class="compare-meta" id="compareMeta"></div>
             </div>
           </div>
         </div>
@@ -622,7 +628,7 @@
               <span style="position:absolute;left:28.57%;transform:translateX(-50%);">20%</span>
               <span style="position:absolute;left:57.14%;transform:translateX(-50%);">40%</span>
               <span style="position:absolute;left:85.71%;transform:translateX(-50%);">60%</span>
-              <span style="position:absolute;right:0;">70% Cut</span>
+              <span style="position:absolute;right:0;">70%</span>
             </div>
             <span></span>
           </div>
@@ -647,7 +653,7 @@
         </div>
 
         <div class="elp-card" style="margin-bottom:0;">
-          <h3>Wan2.1-1.3B Short-Video Diffusion (256-Video VBench)</h3>
+          <h3>Table 1e: Wan2.1-1.3B Short-Video Diffusion (256-Video VBench)</h3>
           <p class="elp-sub">Speed and Balanced halve compute with strong consistency sub-dimensions, while Quality achieves the highest overall VBench score.</p>
           <div class="table-wrap">
             <table class="data-table">
@@ -760,7 +766,10 @@
         <h2 class="section-title">BibTeX</h2>
       </div>
       <div class="bib-wrap">
-        <button type="button" class="copy-btn" id="copyBibBtn">Copy BibTeX</button>
+        <div class="bib-bar">
+          <span class="bib-label">BibTeX</span>
+          <button type="button" class="copy-btn" id="copyBibBtn">Copy BibTeX</button>
+        </div>
         <pre class="bib-code" id="bibText">@misc{chen2026elp,
   title        = {Evolving Loop Programs: Discovering How Frozen Transformers Should Loop},
   author       = {Chen, Yang and Shen, Kaitai and Zhou, Xuemei and Long, Teng and Hu, Vincent Tao},
@@ -775,7 +784,7 @@
   <div class="footer-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
   <footer class="footer">
     <div class="container">
-      Evolving Loop Programs (ELP) &middot; In Submission &middot; <strong>Multimodal</strong> Inference across Image, Video, and Text &middot; All weights frozen at inference time.
+      Evolving Loop Programs (ELP) &middot; Research Preprint &middot; <strong>Multimodal</strong> Inference across Image, Video, and Text &middot; All weights frozen at inference time.
     </div>
   </footer>
 
@@ -789,8 +798,8 @@
   </div>
 
   <div id="chartTooltip" class="chart-tooltip" role="tooltip"></div>
-  <script src="charts.js"></script>
+  <script src="charts.js?v=polish-20261127"></script>
   <script src="method_anim.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js?v=polish-20261127"></script>
 </body>
 </html>

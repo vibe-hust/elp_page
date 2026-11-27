@@ -19,13 +19,38 @@
   .institution-logos .institution-trento { width: 80px; }
 }
 /* ELP: institutions replace the repeated project wordmark. */
-.topbar-inner { height: auto; min-height: 66px; flex-wrap: wrap; gap: 4px 20px; padding-block: 8px; }
+.topbar-inner { height: auto; min-height: 62px; flex-wrap: wrap; gap: 4px 18px; padding-block: 6px; }
 .topbar .nav-links { margin-left: auto; flex-wrap: wrap; overflow: visible; }
-.topbar .nav-links a { padding-inline: 9px; }
+.topbar .nav-links a { padding-inline: 10px; }
 @media (max-width: 1100px) {
-  .topbar .institution-logos { flex-basis: 100%; }
-  .topbar .nav-links { margin-left: 0; }
+  .topbar .institution-logos { flex: 1 1 auto; }
+  .topbar .nav-links { order: 3; flex-basis: 100%; margin-left: 0; }
+  .topbar .nav-code-pill { order: 2; margin-left: auto; }
 }
-@media (max-width: 600px) { .topbar-inner { padding-inline: 16px; } }
+@media (max-width: 760px) {
+  .topbar-inner { padding: 6px 14px; gap: 4px 10px; min-height: 52px; }
+  .topbar .institution-logos { gap: 10px; }
+  .topbar .institution-logos a { min-height: 30px; padding: 2px 0; }
+  .topbar .institution-logos .institution-hust { width: 88px; }
+  .topbar .institution-logos .institution-cwi { width: 64px; }
+  .topbar .institution-logos .institution-trento { width: 68px; }
+  .topbar .nav-code-pill { display: inline-flex; padding: 5px 11px; font-size: 0.76rem; }
+  .topbar .nav-links {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 2px;
+    padding-bottom: 1px;
+  }
+  .topbar .nav-links::-webkit-scrollbar { display: none; }
+  .topbar .nav-links a { padding: 4px 9px; font-size: 0.79rem; }
+}
+@media (max-width: 375px) {
+  .topbar .institution-logos { gap: 8px; }
+  .topbar .institution-logos .institution-hust { width: 78px; }
+  .topbar .institution-logos .institution-cwi { width: 56px; }
+  .topbar .institution-logos .institution-trento { width: 60px; }
+}
 
 section[id], .section[id] { scroll-margin-top: calc(var(--institution-header-height, 66px) + 16px); }
