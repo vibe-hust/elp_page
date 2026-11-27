@@ -60,6 +60,22 @@ const LONGLIVE_SCENES = [
     ssimOurs: '0.9602',
     note: 'Baseline embeds dark arc artifacts and shifts camera framing; ELP seals cleanly and restores the original crackers.',
     stripPrefix: 'barrel'
+  },
+  {
+    id: 'suitcase',
+    label: 'Suitcase (Failure Case)',
+    title: 'Gray Suitcase & Yellow Shirt (Failure Case \u00b7 Held-Out)',
+    failure: true,
+    baseVideo: 'assets/videos/longlive/suitcase_base.mp4',
+    oursVideo: 'assets/videos/longlive/suitcase_ours.mp4',
+    clipBase: '0.6486',
+    clipOurs: '0.8007',
+    lpipsBase: '0.6627',
+    lpipsOurs: '0.5822',
+    ssimBase: '0.9514',
+    ssimOurs: '0.9683',
+    note: 'Failure case (remaining LPIPS > 0.40 on held-out split): both models open at 3.6s and close cleanly at 6.5s, but on revisit (12.5s\u201315.8s) Native jams shut while ELP recalls the yellow shirt inside yet fails to lift the rigid lid back open\u2014instead peeling/warping only the bottom-left corner. This illustrates the boundary of training-free looping: middle-band recurrence stabilizes memory against drift, while frozen weights inherit the base model\u2019s large-motion execution limits.',
+    stripPrefix: 'suitcase'
   }
 ];
 
@@ -473,7 +489,11 @@ function setupLongLiveGallery() {
   const renderScene = (idx) => {
     const s = LONGLIVE_SCENES[idx];
     tabsEl.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+    const failureChip = s.failure
+      ? '<span class="metric-chip failure-chip">Failure Case &middot; Held-Out</span>'
+      : '';
     metricsEl.innerHTML = `
+      ${failureChip}
       <span class="metric-chip">CLIP: ${s.clipBase} &rarr; <strong>${s.clipOurs}</strong></span>
       <span class="metric-chip">LPIPS: ${s.lpipsBase} &rarr; <strong>${s.lpipsOurs}</strong></span>
       <span class="metric-chip">TempSSIM: ${s.ssimBase} &rarr; <strong>${s.ssimOurs}</strong></span>
@@ -486,7 +506,7 @@ function setupLongLiveGallery() {
     controller.loadSources([s.baseVideo, s.oursVideo], false);
 
     if (!s.stripPrefix) {
-      stripEl.innerHTML = `<div class="prompt-banner" style="margin:0;"><strong>${s.title}:</strong> ${s.note}</div>`;
+      stripEl.innerHTML = `<div class="prompt-banner${s.failure ? ' failure-banner' : ''}" style="margin:0;"><strong>${s.title}:</strong> ${s.note}</div>`;
       return;
     }
 
@@ -501,7 +521,7 @@ function setupLongLiveGallery() {
     }).join('');
 
     stripEl.innerHTML = `
-      <div class="prompt-banner" style="margin:0 0 12px;"><strong>${s.title}:</strong> ${s.note} <em>(Click any frame below to seek both videos.)</em></div>
+      <div class="prompt-banner${s.failure ? ' failure-banner' : ''}" style="margin:0 0 12px;"><strong>${s.title}:</strong> ${s.note} <em>(Click any frame below to seek both videos.)</em></div>
       <div class="strip-scroll">
         <div class="strip-grid">
           <div></div>${headerCells}
@@ -516,7 +536,7 @@ function setupLongLiveGallery() {
   };
 
   tabsEl.innerHTML = LONGLIVE_SCENES.map((s, i) =>
-    `<button type="button" class="tab-btn ours-accent${i === 0 ? ' active' : ''}" data-ll="${i}">${s.label}</button>`
+    `<button type="button" class="tab-btn ${s.failure ? 'failure-tab' : 'ours-accent'}${i === 0 ? ' active' : ''}" data-ll="${i}">${s.label}</button>`
   ).join('');
   tabsEl.querySelectorAll('.tab-btn').forEach((b) => {
     b.addEventListener('click', () => renderScene(parseInt(b.dataset.ll, 10)));

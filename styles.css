@@ -816,6 +816,24 @@ a:hover {
   color: #ffffff;
 }
 
+.tab-btn.failure-tab {
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #92400e;
+  background: #fffbeb;
+}
+
+.tab-btn.failure-tab:hover {
+  background: #fef3c7;
+  border-color: #d97706;
+  color: #78350f;
+}
+
+.tab-btn.failure-tab.active {
+  background: #b45309;
+  border-color: #b45309;
+  color: #ffffff;
+}
+
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
@@ -956,6 +974,13 @@ a:hover {
 }
 
 .metric-chip strong { color: var(--ours-dark); }
+
+.metric-chip.failure-chip {
+  background: #fef3c7;
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #92400e;
+  font-weight: 600;
+}
 
 /* Video Duo */
 .video-duo {
@@ -1144,6 +1169,12 @@ a:hover {
   font-size: 0.86rem;
   color: var(--ink-2);
   margin-bottom: 14px;
+}
+
+.prompt-banner.failure-banner {
+  background: #fffbeb;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  border-left: 3px solid #d97706;
 }
 
 /* Segmented Toggle & Image Gallery */
