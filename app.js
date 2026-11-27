@@ -222,16 +222,24 @@ function createSyncController(containerEl) {
     });
   });
 
-  if (rateSelect) {
-    rateSelect.addEventListener('change', () => {
-      const r = parseFloat(rateSelect.value || '1');
-      videos.forEach((v) => {
-        v.playbackRate = r;
-      });
+  const applyPlaybackRate = () => {
+    if (!rateSelect) return;
+    const r = parseFloat(rateSelect.value || '1');
+    if (!Number.isFinite(r) || r <= 0) return;
+    videos.forEach((v) => {
+      v.defaultPlaybackRate = r;
+      v.playbackRate = r;
     });
+  };
+
+  if (rateSelect) {
+    rateSelect.addEventListener('change', applyPlaybackRate);
   }
 
   if (scrubber) {
+    const endScrub = () => {
+      userScrubbing = false;
+    };
     scrubber.addEventListener('input', () => {
       userScrubbing = true;
       syncTime(parseFloat(scrubber.value || '0'), null);
@@ -240,10 +248,14 @@ function createSyncController(containerEl) {
       userScrubbing = false;
       syncTime(parseFloat(scrubber.value || '0'), null);
     });
+    scrubber.addEventListener('pointerup', endScrub);
+    scrubber.addEventListener('keyup', endScrub);
+    scrubber.addEventListener('blur', endScrub);
   }
 
   videos.forEach((v, idx) => {
     v.addEventListener('loadedmetadata', () => {
+      applyPlaybackRate();
       if (pendingSeek !== null) {
         applyVideoTime(v, pendingSeek);
         if (videos.every((vv) => vv.readyState >= 1)) {
@@ -277,6 +289,7 @@ function createSyncController(containerEl) {
         v.src = sources[idx];
         v.load();
       });
+      applyPlaybackRate();
       if (autoPlay) {
         Promise.all(videos.map((v) => v.play().catch(() => {}))).then(updateReadout);
       } else {
@@ -322,7 +335,15 @@ function setupTabs() {
   });
 }
 
-function buildCropHTML(srcPath, crop) {
+function escapeAttr(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function buildCropHTML(srcPath, crop, altText = '', captionText = '') {
   const [x1, y1, x2, y2] = crop;
   const w = x2 - x1;
   const h = y2 - y1;
@@ -330,8 +351,9 @@ function buildCropHTML(srcPath, crop) {
   const imgH = (224 / h) * 100;
   const left = -(x1 / w) * 100;
   const top = -(y1 / h) * 100;
+  const captionAttr = captionText ? ` data-caption="${escapeAttr(captionText)}"` : '';
   return `<div class="qual-crop-frame" style="position:relative;width:100%;aspect-ratio:${w}/${h};overflow:hidden;">
-    <img src="${srcPath}" alt="" style="position:absolute;max-width:none;width:${imgW}%;height:${imgH}%;left:${left}%;top:${top}%;" />
+    <img class="zoomable" src="${srcPath}" alt="${escapeAttr(altText)}"${captionAttr} style="position:absolute;max-width:none;width:${imgW}%;height:${imgH}%;left:${left}%;top:${top}%;" />
   </div>`;
 }
 
@@ -427,16 +449,18 @@ function setupQualGallery() {
       const boxW = ((x2 - x1) / 224) * 100;
       const boxH = ((y2 - y1) / 224) * 100;
       const imgPath = `assets/images/${m.file}`;
+      const altText = `${m.name}: ${m.verdict}`;
+      const capText = `${scene.label} \u2014 ${m.name} (${m.flops}): ${m.verdict}`;
       return `<div class="qual-card${m.ours ? ' ours' : ''}">
         <div class="qual-head">
           <div class="qual-method">${m.name}</div>
           <div class="qual-flops">${m.flops}</div>
         </div>
         <div class="qual-img-wrap">
-          <img class="full-img zoomable" src="${imgPath}" alt="${m.name}: ${m.verdict}" data-caption="${scene.label} &mdash; ${m.name} (${m.flops}): ${m.verdict}" />
+          <img class="full-img zoomable" src="${imgPath}" alt="${escapeAttr(altText)}" data-caption="${escapeAttr(capText)}" />
           <div class="qual-crop-box" style="left:${boxLeft}%;top:${boxTop}%;width:${boxW}%;height:${boxH}%;"></div>
         </div>
-        ${buildCropHTML(imgPath, m.crop)}
+        ${buildCropHTML(imgPath, m.crop, altText, capText)}
         <div class="qual-verdict">${m.verdict}</div>
       </div>`;
     }).join('');

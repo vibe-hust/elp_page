@@ -11,9 +11,6 @@ Edit `index.html`, the scripts and stylesheets, or files under `assets/`.
 GitHub Pages publishes the root of `main` automatically after each push.
 No installation or build step is required; `.nojekyll` disables Jekyll.
 
-`project-meta.css` is a local copy of the author and project-link styles, so this
-website can be deployed independently of the VibeLab homepage.
-
 The previous URL, https://vibe-hust.github.io/elp/, redirects to this site.
 
 ## Source

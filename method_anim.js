@@ -304,7 +304,7 @@
         {
           id: "l_probe",
           start: 4.2,
-          end: 8.8,
+          end: 8.2,
           focusT: 5.40,
           compIdx: 1,
           roundTag: "R0 \u00b7 Diagnostics",
@@ -334,7 +334,7 @@
         },
         {
           id: "l_evolve",
-          start: 8.8,
+          start: 8.2,
           end: 13.6,
           focusT: 12.24,
           compIdx: 2,
@@ -749,22 +749,30 @@
       timeSec = SCENARIOS[0].acts[SCENARIOS[0].acts.length - 1].focusT;
     }
 
-    // --- 1. Top Header Bar: Stacked Scenario Tabs + 4-Component Pipeline Stepper ---
+    // --- 1. Header: scenario selector cards + 4-step pipeline track ---
     const topBar = document.createElement("div");
     topBar.className = "ma-topbar";
 
     const scenStrip = document.createElement("div");
     scenStrip.className = "ma-scen-strip";
-    const scenLbl = document.createElement("span");
-    scenLbl.className = "ma-scen-label";
-    scenLbl.textContent = "Search Trace:";
-    scenStrip.appendChild(scenLbl);
+    scenStrip.setAttribute("role", "tablist");
+    scenStrip.setAttribute("aria-label", "Search trace");
 
     const scenButtons = SCENARIOS.map((sc, idx) => {
       const btn = document.createElement("button");
       btn.type = "button";
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", idx === 0 ? "true" : "false");
       btn.className = "ma-scen-btn" + (idx === 0 ? " active" : "");
-      btn.textContent = sc.pill;
+      const parts = sc.pill.split(" \u00b7 ");
+      const modality = parts.length > 1 ? parts[0] : "";
+      const rest = parts.length > 1 ? parts.slice(1).join(" \u00b7 ") : sc.pill;
+      const m = rest.match(/^(.*?)\s*\((.*)\)\s*$/);
+      const name = m ? m[1] : rest;
+      const gain = m ? m[2] : "";
+      btn.innerHTML = `<span class="ma-scen-mod ma-mod-${modality.toLowerCase()}">${modality}</span>` +
+        `<span class="ma-scen-name">${name}</span>` +
+        (gain ? `<span class="ma-scen-gain">${gain}</span>` : "");
       btn.addEventListener("click", () => switchScenario(idx));
       scenStrip.appendChild(btn);
       return btn;
@@ -793,13 +801,44 @@
     topBar.appendChild(compStrip);
     root.appendChild(topBar);
 
-    // --- 2. Main 2-Column Stage ---
+    // --- 2. Narration banner: what is happening in this round ---
+    const narrBar = document.createElement("div");
+    narrBar.className = "ma-narr-bar";
+    const narrMeta = document.createElement("div");
+    narrMeta.className = "ma-narr-meta";
+    const roundBadge = document.createElement("span");
+    roundBadge.className = "ma-round-badge";
+    const stateBadge = document.createElement("span");
+    stateBadge.className = "ma-state-badge";
+    narrMeta.appendChild(roundBadge);
+    narrMeta.appendChild(stateBadge);
+    const narrEl = document.createElement("p");
+    narrEl.className = "ma-narr";
+    narrEl.setAttribute("aria-live", "polite");
+    narrBar.appendChild(narrMeta);
+    narrBar.appendChild(narrEl);
+    root.appendChild(narrBar);
+
+    // --- 3. Main stage: schematic | code + observe/evolve ---
     const stage = document.createElement("div");
     stage.className = "ma-stage";
 
     const vecCard = document.createElement("div");
     vecCard.className = "ma-vec-card";
-    const vecSvg = svgEl("svg", { class: "ma-vec-svg", viewBox: "0 0 600 355", role: "img", "aria-label": "Animated ELP transformer loop mechanism schematic" }, vecCard);
+    const vecSvg = svgEl("svg", { class: "ma-vec-svg", viewBox: "8 42 584 250", role: "img", "aria-label": "Animated ELP transformer loop mechanism schematic" }, vecCard);
+    const coordRow = document.createElement("div");
+    coordRow.className = "ma-coords";
+    const coordEls = ["Structure", "Dynamics", "Control"].map((lbl) => {
+      const item = document.createElement("div");
+      item.className = "ma-coord";
+      item.innerHTML = `<span class="ma-coord-k">${lbl}</span><span class="ma-coord-v"></span>`;
+      coordRow.appendChild(item);
+      return item.querySelector(".ma-coord-v");
+    });
+    const freezeEl = document.createElement("span");
+    freezeEl.className = "ma-freeze";
+    coordRow.appendChild(freezeEl);
+    vecCard.appendChild(coordRow);
     stage.appendChild(vecCard);
 
     const sideCol = document.createElement("div");
@@ -809,18 +848,16 @@
     codeCard.className = "ma-code-card";
     const codeHead = document.createElement("div");
     codeHead.className = "ma-code-head";
+    const dots = document.createElement("span");
+    dots.className = "ma-code-dots";
+    dots.innerHTML = "<i></i><i></i><i></i>";
     const fileLabel = document.createElement("span");
     fileLabel.className = "ma-code-file";
-    const headRight = document.createElement("div");
-    headRight.className = "ma-code-badges";
-    const roundBadge = document.createElement("span");
-    roundBadge.className = "ma-round-badge";
-    const stateBadge = document.createElement("span");
-    stateBadge.className = "ma-state-badge";
-    headRight.appendChild(roundBadge);
-    headRight.appendChild(stateBadge);
+    const metricChip = document.createElement("span");
+    metricChip.className = "ma-metric-chip";
+    codeHead.appendChild(dots);
     codeHead.appendChild(fileLabel);
-    codeHead.appendChild(headRight);
+    codeHead.appendChild(metricChip);
 
     const codeBody = document.createElement("div");
     codeBody.className = "ma-code-body";
@@ -831,10 +868,10 @@
     logCard.className = "ma-log-card";
     const obsRow = document.createElement("div");
     obsRow.className = "ma-log-row";
-    obsRow.innerHTML = `<span class="ma-log-key ma-k-obs">OBSERVE</span><span class="ma-log-val"></span>`;
+    obsRow.innerHTML = `<span class="ma-log-key ma-k-obs">Observe</span><span class="ma-log-val"></span>`;
     const evoRow = document.createElement("div");
     evoRow.className = "ma-log-row";
-    evoRow.innerHTML = `<span class="ma-log-key ma-k-evo">EVOLVE</span><span class="ma-log-val"></span>`;
+    evoRow.innerHTML = `<span class="ma-log-key ma-k-evo">Evolve</span><span class="ma-log-val"></span>`;
     const obsValEl = obsRow.querySelector(".ma-log-val");
     const evoValEl = evoRow.querySelector(".ma-log-val");
     logCard.appendChild(obsRow);
@@ -845,24 +882,27 @@
     stage.appendChild(sideCol);
     root.appendChild(stage);
 
-    // --- 3. Interactive Metric Timeline SVG ---
-    const chartWrap = document.createElement("div");
-    chartWrap.className = "ma-chart-wrap";
-    const chartSvg = svgEl("svg", { class: "ma-chart-svg", viewBox: "0 0 960 116", role: "img", "aria-label": "Interactive metric trajectory timeline" }, chartWrap);
-    root.appendChild(chartWrap);
-
-    // --- 4. Footer: Dynamic Narration + Controls ---
-    const footer = document.createElement("div");
-    footer.className = "ma-footer";
-    const narrEl = document.createElement("p");
-    narrEl.className = "ma-narr";
-    narrEl.setAttribute("aria-live", "polite");
+    // --- 4. Timeline: play controls + scrubbable metric trajectory ---
+    const timeline = document.createElement("div");
+    timeline.className = "ma-timeline";
 
     const ctrlRow = document.createElement("div");
     ctrlRow.className = "ma-ctrl-row";
     const playBtn = document.createElement("button");
     playBtn.type = "button";
     playBtn.className = "ma-btn ma-btn-play";
+    const replayBtn = document.createElement("button");
+    replayBtn.type = "button";
+    replayBtn.className = "ma-btn ma-btn-replay";
+    replayBtn.setAttribute("aria-label", "Replay from the start");
+    replayBtn.textContent = "\u21bb";
+    const clockEl = document.createElement("span");
+    clockEl.className = "ma-clock";
+    ctrlRow.appendChild(playBtn);
+    ctrlRow.appendChild(replayBtn);
+    ctrlRow.appendChild(clockEl);
+
+    // Range input kept for keyboard access; the chart itself is the visual scrubber.
     const slider = document.createElement("input");
     slider.type = "range";
     slider.className = "ma-slider";
@@ -871,20 +911,15 @@
     slider.step = "1";
     slider.value = "0";
     slider.setAttribute("aria-label", "Method walkthrough timeline");
-    const clockEl = document.createElement("span");
-    clockEl.className = "ma-clock";
-    const replayBtn = document.createElement("button");
-    replayBtn.type = "button";
-    replayBtn.className = "ma-btn";
-    replayBtn.textContent = "\u21bb Replay";
 
-    ctrlRow.appendChild(playBtn);
-    ctrlRow.appendChild(slider);
-    ctrlRow.appendChild(clockEl);
-    ctrlRow.appendChild(replayBtn);
-    footer.appendChild(narrEl);
-    footer.appendChild(ctrlRow);
-    root.appendChild(footer);
+    const chartWrap = document.createElement("div");
+    chartWrap.className = "ma-chart-wrap";
+    const chartSvg = svgEl("svg", { class: "ma-chart-svg", viewBox: "0 0 960 150", role: "img", "aria-label": "Interactive metric trajectory timeline" }, chartWrap);
+    chartWrap.appendChild(slider);
+
+    timeline.appendChild(ctrlRow);
+    timeline.appendChild(chartWrap);
+    root.appendChild(timeline);
 
     // --- Persistent SVG Structures (Reset cleanly per Scenario) ---
     let dynVec = {};
@@ -913,8 +948,9 @@
       const mSlate = svgEl("marker", { id: "maArrowSlate", markerWidth: "7", markerHeight: "7", refX: "5.5", refY: "3.5", orient: "auto" }, defs);
       svgEl("path", { d: "M0,1 L6,3.5 L0,6 z", fill: "#94a3b8" }, mSlate);
 
-      // Outer subtle surface
-      svgEl("rect", { x: 2, y: 2, width: 596, height: 351, rx: 12, fill: "#fbfcfe", stroke: "#e2e8f0" }, vecSvg);
+      // Outer canvas (the header strip and coordinate strip below are cropped out by the viewBox;
+      // their values are mirrored into HTML chips around the schematic)
+      svgEl("rect", { x: 2, y: 2, width: 596, height: 351, rx: 12, fill: "#ffffff", stroke: "none" }, vecSvg);
 
       // Top Header Strip
       svgEl("rect", { x: 12, y: 10, width: 576, height: 28, rx: 7, fill: "#f1f5f9", stroke: "#e2e8f0" }, vecSvg);
@@ -928,7 +964,7 @@
       const tTelem = svgEl("text", { x: 461, y: 27.0, "text-anchor": "middle", fill: "#a7144a", "font-size": "9.3", "font-weight": "700" }, vecSvg);
 
       // Left Panel: Transformer Stack + Recurrence Arc
-      svgEl("rect", { x: 12, y: 46, width: 314, height: 242, rx: 10, fill: "#ffffff", stroke: "#e2e8f0" }, vecSvg);
+      svgEl("rect", { x: 12, y: 46, width: 314, height: 242, rx: 12, fill: "#fbfcfe", stroke: "#e8edf3" }, vecSvg);
       const leftHead = svgEl("text", { x: 24, y: 65, fill: "#334155", "font-size": "10.8", "font-weight": "700" }, vecSvg);
       leftHead.textContent = sc.stackTitle;
 
@@ -994,7 +1030,7 @@
       const orbPassLbl = svgEl("text", { x: 178, y: 244, "text-anchor": "middle", fill: "#475569", "font-size": "9.4", "font-weight": "600" }, vecSvg);
 
       // Right Panel inside SVG (`x=334..588, y=46..288`)
-      svgEl("rect", { x: 334, y: 46, width: 254, height: 242, rx: 10, fill: "#ffffff", stroke: "#e2e8f0" }, vecSvg);
+      svgEl("rect", { x: 334, y: 46, width: 254, height: 242, rx: 12, fill: "#fbfcfe", stroke: "#e8edf3" }, vecSvg);
       const rightHead = svgEl("text", { x: 346, y: 65, fill: "#334155", "font-size": "10.8", "font-weight": "700" }, vecSvg);
 
       const rightFooterBadge = svgEl("rect", { x: 344, y: 254, width: 234, height: 24, rx: 6, fill: "#f8fafc", stroke: "#cbd5e1" }, vecSvg);
@@ -1229,31 +1265,37 @@
     function buildChart() {
       chartSvg.innerHTML = "";
       const sc = SCENARIOS[scenarioIdx];
-      const padL = 68, padR = 26, padT = 24, padB = 26;
+      const VB_H = 150;
+      const padL = 70, padR = 24, padT = 36, padB = 30;
       const cw = 960 - padL - padR;
-      const ch = 116 - padT - padB;
+      const ch = VB_H - padT - padB;
       const [yMin, yMax] = sc.yRange;
 
       const xOf = (tn) => padL + clamp(tn, 0, 1) * cw;
       const yOf = (v) => padT + (1 - (v - yMin) / (yMax - yMin)) * ch;
 
-      // Header title & well-separated legends (`x1=545`, `x1=745`)
-      const cTitle = svgEl("text", { x: padL, y: 14, fill: "#0f172a", "font-size": "10.6", "font-weight": "700" }, chartSvg);
+      const cDefs = svgEl("defs", {}, chartSvg);
+      const grad = svgEl("linearGradient", { id: "maAreaGrad", x1: "0", y1: "0", x2: "0", y2: "1" }, cDefs);
+      svgEl("stop", { offset: "0%", "stop-color": "#d81b60", "stop-opacity": "0.22" }, grad);
+      svgEl("stop", { offset: "100%", "stop-color": "#d81b60", "stop-opacity": "0" }, grad);
+
+      // Header title & legends
+      const cTitle = svgEl("text", { x: padL, y: 17, fill: "#0f172a", "font-size": "12.5", "font-weight": "700" }, chartSvg);
       cTitle.textContent = sc.chartTitle;
 
-      svgEl("line", { x1: 545, y1: 11, x2: 565, y2: 11, stroke: "#94a3b8", "stroke-width": 1.8, "stroke-dasharray": "4 3" }, chartSvg);
-      const legBase = svgEl("text", { x: 570, y: 14, fill: "#64748b", "font-size": "9.3", "font-weight": "600" }, chartSvg);
+      svgEl("line", { x1: 560, y1: 13, x2: 582, y2: 13, stroke: "#94a3b8", "stroke-width": 2, "stroke-dasharray": "4 3" }, chartSvg);
+      const legBase = svgEl("text", { x: 588, y: 17, fill: "#64748b", "font-size": "11", "font-weight": "600" }, chartSvg);
       legBase.textContent = sc.baselineLegend;
 
-      svgEl("line", { x1: 745, y1: 11, x2: 765, y2: 11, stroke: "#d81b60", "stroke-width": 2.4 }, chartSvg);
-      const legMain = svgEl("text", { x: 770, y: 14, fill: "#a7144a", "font-size": "9.3", "font-weight": "700" }, chartSvg);
+      svgEl("line", { x1: 760, y1: 13, x2: 782, y2: 13, stroke: "#d81b60", "stroke-width": 3, "stroke-linecap": "round" }, chartSvg);
+      const legMain = svgEl("text", { x: 788, y: 17, fill: "#a7144a", "font-size": "11", "font-weight": "700" }, chartSvg);
       legMain.textContent = sc.mainLegend;
 
       // Grid lines + Y ticks
       sc.yTicks.forEach((yv) => {
         const py = yOf(yv);
-        svgEl("line", { x1: padL, y1: py, x2: padL + cw, y2: py, stroke: "#e2e8f0", "stroke-width": 1 }, chartSvg);
-        const yl = svgEl("text", { x: padL - 8, y: py + 3.2, "text-anchor": "end", fill: "#64748b", "font-size": "8.9" }, chartSvg);
+        svgEl("line", { x1: padL, y1: py, x2: padL + cw, y2: py, stroke: "#eef2f6", "stroke-width": 1 }, chartSvg);
+        const yl = svgEl("text", { x: padL - 10, y: py + 3.6, "text-anchor": "end", fill: "#94a3b8", "font-size": "10.5" }, chartSvg);
         yl.textContent = sc.yFmt(yv);
       });
 
@@ -1264,24 +1306,25 @@
         "text-anchor": "middle",
         transform: `rotate(-90 16 ${yAxisMidY.toFixed(1)})`,
         fill: "#64748b",
-        "font-size": "8.6",
+        "font-size": "10.5",
         "font-weight": "700"
       }, chartSvg);
       yAxisName.textContent = sc.yLabel;
 
       // Baseline dashed path
       const basePts = sc.baselineCurve.map((p) => `${xOf(p.tNorm).toFixed(1)},${yOf(p.value).toFixed(1)}`).join(" L ");
-      svgEl("path", { d: "M " + basePts, fill: "none", stroke: "#94a3b8", "stroke-width": 1.8, "stroke-dasharray": "4 3" }, chartSvg);
+      svgEl("path", { d: "M " + basePts, fill: "none", stroke: "#94a3b8", "stroke-width": 2, "stroke-dasharray": "5 4", "stroke-linecap": "round" }, chartSvg);
 
-      // Ghost future main curve + active progress main curve
+      // Ghost future main curve + active progress area/curve
       const mainPtsStr = sc.mainCurve.map((p) => `${xOf(p.tNorm).toFixed(1)},${yOf(p.value).toFixed(1)}`).join(" L ");
-      svgEl("path", { d: "M " + mainPtsStr, fill: "none", stroke: "#f9d5e3", "stroke-width": 2.6 }, chartSvg);
-      const progPath = svgEl("path", { d: "", fill: "none", stroke: "#d81b60", "stroke-width": 2.8, "stroke-linecap": "round" }, chartSvg);
+      svgEl("path", { d: "M " + mainPtsStr, fill: "none", stroke: "#f6d3e1", "stroke-width": 2.6, "stroke-linecap": "round", "stroke-linejoin": "round" }, chartSvg);
+      const progArea = svgEl("path", { d: "", fill: "url(#maAreaGrad)", stroke: "none" }, chartSvg);
+      const progPath = svgEl("path", { d: "", fill: "none", stroke: "#d81b60", "stroke-width": 3.2, "stroke-linecap": "round", "stroke-linejoin": "round" }, chartSvg);
 
       // X-axis base rule + playhead
       svgEl("line", { x1: padL, y1: padT + ch, x2: padL + cw, y2: padT + ch, stroke: "#cbd5e1", "stroke-width": 1.2 }, chartSvg);
-      const playhead = svgEl("line", { x1: padL, y1: padT - 4, x2: padL, y2: padT + ch, stroke: "#0f172a", "stroke-width": 1.6 }, chartSvg);
-      const playKnob = svgEl("circle", { cx: padL, cy: padT + ch, r: 4.5, fill: "#d81b60", stroke: "#ffffff", "stroke-width": 1.5 }, chartSvg);
+      const playhead = svgEl("line", { x1: padL, y1: padT, x2: padL, y2: padT + ch, stroke: "#0f172a", "stroke-width": 1.4, "stroke-dasharray": "3 3", opacity: "0.55" }, chartSvg);
+      const playKnob = svgEl("circle", { cx: padL, cy: padT + ch, r: 5, fill: "#0f172a", stroke: "#ffffff", "stroke-width": 2 }, chartSvg);
 
       // Background scrub hitRect appended BEFORE dots so milestone dot clicks remain directly reachable
       const hitRect = svgEl("rect", { x: padL, y: padT - 4, width: cw, height: ch + 22, fill: "transparent", style: "cursor:ew-resize" }, chartSvg);
@@ -1314,9 +1357,9 @@
         const px = xOf(pt.tNorm);
         const py = yOf(pt.value);
         const g = svgEl("g", { class: "ma-chart-pt", style: "cursor:pointer" }, chartSvg);
-        svgEl("line", { x1: px, y1: padT, x2: px, y2: padT + ch, stroke: "#f1f5f9", "stroke-width": 1 }, g);
-        const c = svgEl("circle", { cx: px, cy: py, r: 4.3, fill: "#ffffff", stroke: "#d81b60", "stroke-width": 2 }, g);
-        const xl = svgEl("text", { x: px, y: padT + ch + 14, "text-anchor": "middle", fill: "#475569", "font-size": "9.1", "font-weight": "600" }, g);
+        svgEl("line", { x1: px, y1: padT, x2: px, y2: padT + ch, stroke: "#f5f7fa", "stroke-width": 1 }, g);
+        const c = svgEl("circle", { cx: px, cy: py, r: 4.6, fill: "#ffffff", stroke: "#d81b60", "stroke-width": 2.2 }, g);
+        const xl = svgEl("text", { x: px, y: padT + ch + 17, "text-anchor": "middle", fill: "#475569", "font-size": "11", "font-weight": "600" }, g);
         xl.textContent = pt.label;
         svgEl("circle", { cx: px, cy: py, r: 14, fill: "transparent" }, g);
         svgEl("rect", { x: px - 22, y: padT + ch + 1, width: 44, height: 18, fill: "transparent" }, g);
@@ -1333,12 +1376,15 @@
         return { pt, px, py, c, xl };
       });
 
-      dynChart = { padL, cw, xOf, yOf, progPath, playhead, playKnob, dots };
+      dynChart = { padL, padT, ch, cw, xOf, yOf, progPath, progArea, playhead, playKnob, dots };
     }
 
     function switchScenario(idx) {
       scenarioIdx = idx;
-      scenButtons.forEach((b, i) => b.classList.toggle("active", i === idx));
+      scenButtons.forEach((b, i) => {
+        b.classList.toggle("active", i === idx);
+        b.setAttribute("aria-selected", i === idx ? "true" : "false");
+      });
       const sc = SCENARIOS[idx];
       timeSec = (motionMQ && motionMQ.matches) ? sc.acts[sc.acts.length - 1].focusT : sc.acts[0].focusT;
       lastCodeSig = "";
@@ -1389,12 +1435,20 @@
 
       // Interpolate live trajectory value in lockstep with chart playhead
       const liveVal = interpCurve(sc.mainCurve, tNorm);
-      dynVec.tTelem.textContent = `${sc.telemPrefix} ${sc.telemFmt(liveVal)}  \u00b7  ${act.flopsText}`;
+      const telemStr = `${sc.telemPrefix} ${sc.telemFmt(liveVal)}  \u00b7  ${act.flopsText}`;
+      dynVec.tTelem.textContent = telemStr;
+      metricChip.textContent = telemStr;
 
       if (forceText || act.id !== lastActId) {
         lastActId = act.id;
         renderCode(act);
         narrEl.textContent = act.narration;
+        root.dataset.state = act.frozen ? "frozen" : act.state;
+        coordEls[0].textContent = act.structBadge;
+        coordEls[1].textContent = act.dynBadge;
+        coordEls[2].textContent = act.ctrlBadge;
+        freezeEl.textContent = act.frozen ? "\ud83d\udd12 Frozen \u00b7 0 LLM calls" : "Searching offline\u2026";
+        freezeEl.classList.toggle("is-frozen", !!act.frozen);
         compButtons.forEach((btn, idx) => {
           btn.classList.toggle("active", idx === act.compIdx);
           btn.classList.toggle("done", idx < act.compIdx);
@@ -1724,24 +1778,29 @@
         }
       }
       if (pts.length > 0) {
-        dynChart.progPath.setAttribute("d", "M " + pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" L "));
+        const lineD = "M " + pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" L ");
+        dynChart.progPath.setAttribute("d", lineD);
+        const baseY = (dynChart.padT + dynChart.ch).toFixed(1);
+        dynChart.progArea.setAttribute("d", `${lineD} L ${pts[pts.length - 1][0].toFixed(1)},${baseY} L ${pts[0][0].toFixed(1)},${baseY} Z`);
       } else {
         dynChart.progPath.setAttribute("d", "");
+        dynChart.progArea.setAttribute("d", "");
       }
 
       dynChart.dots.forEach((d) => {
         const passed = tNorm >= d.pt.tNorm - 0.008;
         const isCurrent = Math.abs(tNorm - d.pt.tNorm) < 0.025;
         d.c.setAttribute("fill", passed ? "#d81b60" : "#ffffff");
-        d.c.setAttribute("r", isCurrent ? "5.2" : (passed ? "4.4" : "3.8"));
-        d.xl.setAttribute("fill", isCurrent ? "#a7144a" : (passed ? "#334155" : "#64748b"));
-        d.xl.setAttribute("font-weight", isCurrent ? "700" : "600");
+        d.c.setAttribute("r", isCurrent ? "6" : (passed ? "4.8" : "4.2"));
+        d.xl.setAttribute("fill", isCurrent ? "#a7144a" : (passed ? "#334155" : "#94a3b8"));
+        d.xl.setAttribute("font-weight", isCurrent ? "800" : "600");
       });
 
-      // 4. Footer Playback Controls & Scrubber
+      // 4. Playback controls
       slider.value = String(Math.round(tNorm * 1000));
-      playBtn.textContent = playing ? "\u275a\u275a Pause" : "\u25b6 Play";
-      clockEl.textContent = `${act.roundTag} \u00b7 ${fmtTime(t)} / ${fmtTime(dur)}`;
+      playBtn.textContent = playing ? "\u275a\u275a" : "\u25b6";
+      playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+      clockEl.textContent = `${fmtTime(t)} / ${fmtTime(dur)}`;
     }
 
     function stepLoop(now) {
@@ -1780,7 +1839,7 @@
     if ("IntersectionObserver" in window) {
       const io = new IntersectionObserver((entries) => {
         inView = entries.some((e) => e.isIntersecting);
-      }, { threshold: 0.15 });
+      }, { threshold: 0.01 });
       io.observe(root);
     }
 
